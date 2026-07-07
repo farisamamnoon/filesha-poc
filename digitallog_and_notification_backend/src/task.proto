@@ -1,0 +1,87 @@
+syntax = "proto3";
+package task;
+
+
+
+service FileUploadService {
+  rpc UploadFiles(UploadFilesRequest) returns (UploadFilesResponse);
+}
+
+message UploadFilesRequest {
+  repeated FileUploadData files = 1;
+}
+
+message FileUploadData {
+  bytes fileContent = 1;
+  string fileName = 2;
+  string mimeType = 3;
+}
+
+message UploadFilesResponse {
+  int32 statusCode = 1;
+  repeated FileUploadResult data = 2;
+  string error = 3;
+}
+
+message FileUploadResult {
+  string originalName = 1;
+  string fileName = 2;
+  string fileUrl = 3;
+  string mimeType = 4;
+  int64 size = 5;
+}
+
+
+
+service WorkerTransferService {
+  rpc RejectWorkerTransfer  (RejectWorkerTransferRequest) returns (WorkerTransferResponse);
+}
+
+message Delegate {
+  string userId = 1;
+}
+
+message UserData {
+  string userName = 1;
+  string email = 2;
+  string userId = 3;
+  string id = 4;
+  Delegate delegate = 5;
+}
+
+message RejectWorkerTransferRequest{
+  string id = 1;
+  string isRejected = 2;
+  UserData users = 3;
+}
+
+message WorkerTransferResponse {
+  int32 statusCode = 1;
+  string message = 2;
+  string error = 3;
+}
+
+
+
+service WorkDoneStatusUpdateService {
+  rpc GetAttendanceMissTimeSheet (GetFilterAttendanceRequest) returns (GetAttendanceResponse);
+}
+
+message GetFilterAttendanceRequest {
+  GetAttendanceRequest query = 1;
+  UserData user = 2;
+}
+
+message GetAttendanceRequest {
+  string date = 1;
+}
+
+message GetAttendanceResponse{
+  int32 statusCode = 1;
+  GetAttendanceResponseDto data = 2;
+  string error = 3;
+}
+
+message GetAttendanceResponseDto {
+  bool isTimeSheetUpdated = 1;
+}

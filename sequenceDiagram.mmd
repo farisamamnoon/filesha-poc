@@ -1,0 +1,26 @@
+sequenceDiagram
+    autonumber
+    actor User
+    participant Gateway as API Gateway
+    participant Backend as Digital Log Backend
+    participant FileStorage as Local Disk & Metadata
+
+    User->>Gateway: POST /api/v1/upload/upload (File + Table)
+    Note over Gateway: Interceptor computes SHA-256 hash of file buffer
+    Gateway->>Backend: gRPC: DoesExist(hash)
+    Backend->>FileStorage: Check metadata.json registry
+    FileStorage-->>Backend: Result (boolean)
+    Backend-->>Gateway: gRPC: { exists: true/false }
+    
+    alt exists == true
+        Gateway-->>User: 409 Conflict (File already exists)
+    else exists == false
+        Note over Gateway: Convert file buffer to 64KB chunks
+        Gateway->>Backend: gRPC client-stream: Upload(stream UploadRequest)
+        Note over Backend: Write chunks to temp file & hash on-the-fly
+        Gateway->>Backend: complete stream
+        Note over Backend: Finalize hash & verify uniqueness
+        Backend->>FileStorage: Save file to uploads/ & append metadata.json
+        Backend-->>Gateway: gRPC response: { statusCode: 200, s3Url }
+        Gateway-->>User: 200 OK { success: true, s3Url }
+    end

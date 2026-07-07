@@ -1,0 +1,31 @@
+syntax = "proto3";
+
+package digital;
+
+import "google/protobuf/struct.proto";
+
+service UploadService {
+  rpc Upload(stream UploadRequest) returns (UploadResponse);
+  rpc DoesExist(DoesExistRequest) returns (DoesExistResponse);
+}
+
+message UploadRequest {
+  string table = 1;
+  string file_name = 2;
+  string content_type = 3;
+  bytes chunk = 4;
+}
+
+message UploadResponse {
+  int32 statusCode = 1;
+  string s3Url = 2;
+  string error = 3;
+}
+
+message DoesExistRequest {
+  string hash = 1;
+}
+
+message DoesExistResponse {
+  bool exists = 1;
+}
