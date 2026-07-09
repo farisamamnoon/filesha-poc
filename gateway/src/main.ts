@@ -6,19 +6,18 @@ import {
   ValidationPipe,
   VersioningType,
 } from "@nestjs/common";
-import { ConfigService } from "@nestjs/config";
 import * as cookieParser from "cookie-parser";
 import { json, urlencoded } from "express";
+import { appConfig } from "./config";
 
 async function bootstrap() {
   const logger = new Logger(AppModule.name);
-  const configService = new ConfigService();
 
-  const PORT = configService.get<string>("APP_PORT", "3000");
-  const requestBodyLimit = configService.get<string>(
-    "REQUEST_BODY_LIMIT",
-    "100mb",
-  );
+  // Log environment configuration used on startup
+  appConfig.logConfig(logger);
+
+  const PORT = appConfig.APP_PORT;
+  const requestBodyLimit = appConfig.REQUEST_BODY_LIMIT;
   const app = await NestFactory.create(AppModule);
 
   const options = {

@@ -3,6 +3,7 @@ import { ClientsModule, Transport } from "@nestjs/microservices";
 import { join } from "path";
 import { UploadService } from "./upload.service";
 import { UploadController } from "./upload.controller";
+import { appConfig } from "../config";
 
 @Module({
   imports: [
@@ -13,7 +14,7 @@ import { UploadController } from "./upload.controller";
         options: {
           package: "digital",
           protoPath: join(__dirname, "../digital.proto"),
-          url: process.env.DIGITAL_LOG_SERVICE_URL || "localhost:5001",
+          url: appConfig.DIGITAL_LOG_SERVICE_URL,
         },
       },
     ]),

@@ -1,23 +1,20 @@
 services:
-  gateway:
+  filesha-gateway:
     build:
       context: ./gateway
       dockerfile: Dockerfile
-    container_name: sp-gateway
     ports:
       - "3000:3000"
     environment:
       - APP_PORT=3000
-      - DIGITAL_LOG_SERVICE_URL=digitallog-backend:5001
+      - DIGITAL_LOG_SERVICE_URL=filesha-digital:5001
       - REQUEST_BODY_LIMIT=100mb
-    depends_on:
-      - digitallog-backend
+      - ALLOWED_MIMETYPES=image/jpeg,image/png,application/pdf
 
-  digitallog-backend:
+  filesha-digital:
     build:
       context: ./digitallog_and_notification_backend
       dockerfile: Dockerfile
-    container_name: sp-digitallog-backend
     ports:
       - "8080:8080"
       - "5001:5001"

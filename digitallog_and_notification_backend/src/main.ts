@@ -1,14 +1,18 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
-import { ConfigService } from '@nestjs/config';
+import { Logger } from '@nestjs/common';
 import { join } from 'path';
 import { MicroserviceOptions, Transport } from '@nestjs/microservices';
+import { appConfig } from './config';
 
 async function bootstrap() {
-  const configService = new ConfigService();
+  const logger = new Logger('Bootstrap');
+  
+  // Log environment configuration used on startup
+  appConfig.logConfig(logger);
 
-  const HTTP_PORT = parseInt(configService.get<string>('HTTP_PORT') || '8080', 10);
-  const GRPC_PORT = parseInt(configService.get<string>('APP_PORT') || '5001', 10);
+  const HTTP_PORT = appConfig.HTTP_PORT;
+  const GRPC_PORT = appConfig.APP_PORT;
 
   const app = await NestFactory.create(AppModule, { bufferLogs: true });
 

@@ -1,14 +1,19 @@
 import {
+  BadRequestException,
   Body,
   Controller,
   HttpStatus,
   Post,
   UploadedFile,
+  UseInterceptors,
 } from "@nestjs/common";
 import { firstValueFrom, ReplaySubject } from "rxjs";
 import { UploadService } from "./upload.service";
 import { FileInterceptAndCheckExists } from "./decorators/file-exists.decorator";
 import { UploadRequest } from "./types/digital";
+import { FileInterceptor } from "@nestjs/platform-express";
+import * as crypto from "crypto";
+import { ValidateMimeType } from "./decorators/mimetype.decorator";
 
 @Controller("upload")
 export class UploadController {
@@ -49,14 +54,11 @@ export class UploadController {
         offset = end;
       }
 
-      console.log("Gateway: completing ReplaySubject stream");
       requestStream.complete();
 
-      console.log("Gateway: sending requestStream to gRPC client...");
       const result = await firstValueFrom(
         await this.uploadService.upload(requestStream),
       );
-      console.log("Gateway: received gRPC response", result);
 
       if (result.statusCode !== 200) {
         return {
@@ -74,6 +76,39 @@ export class UploadController {
         success: true,
         error: "",
         message: "File uploaded successfully",
+      };
+    } catch (error) {
+      return {
+        statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
+        message: "Error uploading file",
+        error: error.message,
+        success: false,
+        data: null,
+      };
+    }
+  }
+
+  @Post("/does-exist")
+  @ValidateMimeType()
+  async checkFileExists(@UploadedFile() file: Express.Multer.File) {
+    try {
+      if (!file) {
+        throw new BadRequestException("File is required.");
+      }
+
+      const hash = crypto
+        .createHash("sha256")
+        .update(file.buffer)
+        .digest("hex");
+
+      const result = await firstValueFrom(
+        await this.uploadService.doesExist({ hash }),
+      );
+
+      return {
+        statusCode: HttpStatus.OK,
+        data: { doesFileExist: result.exists },
+        error: "",
       };
     } catch (error) {
       return {
